@@ -1,6 +1,6 @@
 # The window
 
-`desktop/src/window.ts`, `bounds.ts`, `navigate.ts`, `state.ts`, `dev.ts`.
+`src/window.ts`, `bounds.ts`, `navigate.ts`, `state.ts`, `dev.ts`.
 
 `open()` is the window every app here opens. What it always does, and what each piece
 is protecting against.

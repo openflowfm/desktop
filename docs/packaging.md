@@ -1,6 +1,6 @@
 # Building, packing and installing an app
 
-`tools/app.ts`, `desktop/electron-builder.base.yml`, `tools/build-electron.ts`,
+`tools/app.ts`, `@openflow/desktop/electron-builder.base.yml`, `tools/build-electron.ts`,
 `tools/build-icons.ts`, `tools/install-apps.ts`.
 
 ## One driver
@@ -82,7 +82,8 @@ Not minified. This is what you read when a window does not open.
 
 ## The shared electron-builder config
 
-Each app's `electron-builder.yml` extends `desktop/electron-builder.base.yml`.
+Each app's `electron-builder.yml` extends the installed base at
+`../node_modules/@openflow/desktop/electron-builder.base.yml`.
 `extends` takes a path relative to the project directory and *combines* `files` glob
 patterns rather than replacing them, so an app with a server of its own adds one line
 instead of restating the list.
@@ -126,3 +127,9 @@ and Spotlight will find it is a separate decision — one you want to make after
 rather than in the middle of one.
 
 It knows the apps from the registry, so it needs no editing either.
+
+The driver and packaging assets remain in the consumer repository. Desktop owns
+the shared config and signing backport, shipped alongside its compiled exports.
+Standalone CI tests the pinned signing dependency; consumer CI builds all apps.
+Local QA builds can verify app bundles without distribution credentials using the
+existing `OPENFLOW_QA=1` path; release signing and notarization remain mandatory.

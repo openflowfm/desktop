@@ -1,6 +1,7 @@
 # `@openflow/desktop`
 
-The Electron main process every app here shares. `set[flow]` and `visual[flow]` are
+The shared Electron main process for open[flow] apps. This package lives in
+[openflowfm/desktop](https://github.com/openflowfm/desktop), separately from its app consumers. `set[flow]` and `visual[flow]` are
 each a `main.ts` of about fifty lines plus a preload of five; everything else about
 being a desktop app is in this package, once.
 
@@ -56,3 +57,24 @@ their own `main.ts`, and each one is one short block with a comment saying why.
 The line to hold: **shared code documents the mechanism, an app documents why it opted
 in.** Merging two files merges two reasons, and a reason that has been generalised
 until it fits both is a reason nobody can act on.
+
+## Developing and consuming
+
+Use Node 26 or newer. `npm ci`, `npm test`, `npm run typecheck`, and
+`npm run build` run independently of the app repository. `npm run test:coverage`
+measures the pure and HTTP helpers; Electron window behavior still needs an app.
+
+Consumers install a full commit-pinned Git dependency from this repository. npm's
+`prepare` compiles JavaScript and declarations during Git installation. Existing
+imports such as `@openflow/desktop/apps.ts` resolve to built JavaScript with adjacent
+types: Node cannot strip TypeScript in installed dependencies. The browser-safe
+`reach-client.ts` export remains separate from Electron and Node implementations.
+The builder base is exported as `@openflow/desktop/electron-builder.base.yml`.
+
+The app registry remains here. App-specific entry points, assets, native preparation,
+and the build driver remain in the [app repository](https://github.com/ryangavin/better-session-view).
+Adding an app therefore updates this registry and the consumer's pinned commit.
+Do not edit an installed copy or add Desktop back as a workspace. Update this
+repository, verify its CI, then update the consumer pin and verify every app build.
+No npm registry publication is needed. No signing or notarization policy changes
+are part of consuming this package.

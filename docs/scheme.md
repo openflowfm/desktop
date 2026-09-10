@@ -1,6 +1,6 @@
 # Serving an app's own build
 
-`desktop/src/serve.ts`.
+`src/serve.ts`.
 
 An app with no server of its own is a file server over a `vite build`, and it serves
 that over a scheme of its own rather than `file://`. Two calls: `scheme(app)` before

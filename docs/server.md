@@ -1,6 +1,6 @@
 # An app that owns a backend
 
-`desktop/src/supervise.ts`.
+`src/supervise.ts`.
 
 visual[flow] is the only one so far. It replaces `npm run dev` as the way to run a show:
 `concurrently -k` over ten dev processes means any one of them exiting kills the other

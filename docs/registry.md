@@ -1,6 +1,6 @@
 # The registry, and what an app costs
 
-`desktop/src/apps.ts`.
+`src/apps.ts`.
 
 Every app that opens a window, and the handful of facts about each that more than one
 place needs. It is the file you add an app to, and — with the driver in
@@ -99,3 +99,7 @@ as `*/dist/` and `*/electron/dist/`.
 
 mix[flow] was the app that proved this: a registry entry, the nine steps above, and
 nothing else in the repo changed except the docs saying it exists.
+
+The registry is now distributed by the standalone Desktop Git dependency. App
+files and the build driver remain in the consumer repository; a registry change
+requires a new Desktop commit pin there.

@@ -5,11 +5,45 @@
   "type": "module",
   "description": "The Electron main process every app here shares: the window, the scheme, the dev loop, the child server and the updater.",
   "files": [
-    "src",
+    "dist",
     "docs",
     "electron-builder.base.yml"
   ],
   "exports": {
-    "./*": "./src/*"
+    "./*.ts": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    },
+    "./electron-builder.base.yml": "./electron-builder.base.yml",
+    "./package.json": "./package.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openflowfm/desktop.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "peerDependencies": {
+    "electron": ">=44 <45"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "^7.0.2",
+    "vitest": "5.0.0",
+    "@vitest/coverage-v8": "5.0.0",
+    "electron": "44.2.0",
+    "electron-builder": "26.15.3"
   }
 }

@@ -1,6 +1,6 @@
 # Keeping the apps current
 
-`desktop/src/update.ts`.
+`src/update.ts`.
 
 An updater is the same program in every app — check a feed, download in the background,
 install on quit — and it is the kind of program you want to write once and fix once. It
@@ -12,7 +12,7 @@ calling `updates(app)`, and the fourth gets it by existing.
 Four things have to be true before an app can update itself, and only the first two are
 code:
 
-1. a `publish:` block in `desktop/electron-builder.base.yml` naming the GitHub repo —
+1. a `publish:` block in `@openflow/desktop/electron-builder.base.yml` naming the GitHub repo —
    that is what writes `app-update.yml` into the bundle, and its absence is what
    `updates()` checks for on its first line;
 2. `zip` alongside `dmg` in the mac targets, because Squirrel.Mac updates from a zip and
