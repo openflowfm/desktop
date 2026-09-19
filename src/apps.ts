@@ -13,12 +13,17 @@
  *   * **Nothing is imported here.** The build tools read it under Node, the vite
  *     configs read it while configuring, and the main processes read it inside
  *     an esbuild bundle. A single `import` of `electron` would break two of
- *     those three.
+ *     those three. `node:fs` and `node:path` are the exception: every one of
+ *     those three contexts already reaches for `node:path` (see `dev.ts`,
+ *     `supervise.ts`), so `present()` below stays within what was already safe.
  *   * **Runtime facts only.** What a bundle is *called* — appId, productName,
  *     the artifact name — stays in that app's `electron-builder.yml`, because
  *     that is the file a packager reads and there is no way to hand it this one.
  *     The overlap is deliberate and it is exactly two strings per app.
  */
+
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 /** A server of the app's own, bundled beside it and run by Electron's Node. */
 export interface Server {
@@ -82,6 +87,22 @@ export const APPS = {
 
 /** The names, in the order they were added — the order every tool reports in. */
 export const NAMES = Object.keys(APPS);
+
+/**
+ * The names in `NAMES` whose directory actually exists under `root`.
+ *
+ * `NAMES` answers "every app that exists" — the full registry, regardless of
+ * checkout. `present(root)` answers a narrower question that only came up once
+ * apps started living in their own repositories: "every app in *this*
+ * checkout". A build driver, a packer, or a CI loop that walks `NAMES` and
+ * globs into `<name>/` breaks the moment one of those repos is not checked out
+ * beside this one; walking `present(root)` instead skips cleanly. Anything that
+ * builds or packs apps — rather than merely looking up a port or a title for
+ * one that is assumed present — must use `present()`, not `NAMES`.
+ */
+export function present(root: string): string[] {
+  return NAMES.filter((name) => existsSync(join(root, name)));
+}
 
 /** One app, or a clear error naming the ones there are. */
 export function app(name: string | undefined): App {

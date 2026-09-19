@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { app, APPS, NAMES, serverPort, uiPort } from './apps.ts';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { app, APPS, NAMES, present, serverPort, uiPort } from './apps.ts';
 
 // The registry is the one file here a test runner can reach — everything else
 // in this package imports `electron`, which only exists inside a main process.
@@ -37,6 +40,38 @@ describe('the registry', () => {
 
   it('finds an app by name', () => {
     expect(app('set')).toBe(APPS.set);
+  });
+});
+
+describe('present', () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'openflow-apps-'));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('finds nothing in an empty checkout', () => {
+    expect(present(root)).toEqual([]);
+  });
+
+  it('finds only the apps whose directory exists', () => {
+    mkdirSync(join(root, 'set'));
+    expect(present(root)).toEqual(['set']);
+  });
+
+  it('finds every app once every directory exists', () => {
+    for (const name of NAMES) mkdirSync(join(root, name));
+    expect(present(root)).toEqual(NAMES);
+  });
+
+  it('keeps the order NAMES is in, not the order directories were made', () => {
+    mkdirSync(join(root, 'visuals'));
+    mkdirSync(join(root, 'set'));
+    expect(present(root)).toEqual(['set', 'visuals']);
   });
 });
 

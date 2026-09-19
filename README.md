@@ -15,7 +15,7 @@ not; both had a dev-server retry written once and only one of them used it.
 
 | touching | read |
 |---|---|
-| adding an app, or where an app's ports and names come from | [`docs/registry.md`](docs/registry.md) — `src/apps.ts` |
+| adding an app, or where an app's ports and names come from, or telling every app apart from the ones in this checkout | [`docs/registry.md`](docs/registry.md) — `src/apps.ts`, `present()` |
 | the window, its frame, where it may navigate, when the app quits | [`docs/window.md`](docs/window.md) — `src/window.ts`, `bounds.ts`, `navigate.ts`, `state.ts`, `dev.ts` |
 | an app serving its own build without a server | [`docs/scheme.md`](docs/scheme.md) — `src/serve.ts` |
 | an app that owns a backend process | [`docs/server.md`](docs/server.md) — `src/supervise.ts` |
@@ -72,8 +72,13 @@ types: Node cannot strip TypeScript in installed dependencies. The browser-safe
 The builder base is exported as `@openflow/desktop/electron-builder.base.yml`.
 
 The app registry remains here. App-specific entry points, assets, native preparation,
-and the build driver remain in the [app repository](https://github.com/ryangavin/better-session-view).
-Adding an app therefore updates this registry and the consumer's pinned commit.
+and the build driver remain in the [app repository](https://github.com/ryangavin/better-session-view) —
+though apps may live in their own repositories rather than all being checked out
+together, and the registry is what keeps the union of all of them: `NAMES` names
+every app that exists, and `present(root)` narrows that to every app actually in a
+given checkout, which is the list a build driver or CI loop must use once a checkout
+cannot be assumed to have them all. Adding an app therefore updates this registry
+and the consumer's pinned commit.
 Do not edit an installed copy or add Desktop back as a workspace. Update this
 repository, verify its CI, then update the consumer pin and verify every app build.
 No npm registry publication is needed. No signing or notarization policy changes

@@ -103,3 +103,16 @@ nothing else in the repo changed except the docs saying it exists.
 The registry is now distributed by the standalone Desktop Git dependency. App
 files and the build driver remain in the consumer repository; a registry change
 requires a new Desktop commit pin there.
+
+## `NAMES` vs `present()`
+
+`NAMES` is every app the registry knows about — "every app that exists" — and
+that is the right list for a lookup: `app(name)`, a port, a title. It is the
+wrong list for anything that builds or packs, now that apps can live in their
+own repositories rather than all being checked out together. `present(root)`
+answers the narrower question a build driver actually needs — "every app in
+*this* checkout" — by filtering `NAMES` down to the names whose directory
+exists under `root`. A loop over `NAMES` that globs into `<name>/vite.config.ts`
+fails the moment one app's repo is not there; the same loop over `present(root)`
+skips it cleanly. Anything that builds, packs, or otherwise walks the apps on
+disk should call `present()`, not `NAMES`.
