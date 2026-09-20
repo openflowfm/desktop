@@ -131,12 +131,18 @@ export function lifecycle(electron: Electron.App, reopen: () => void): void {
 /**
  * One instance, and a second launch focuses it.
  *
- * It matters most for an app that owns a server: a second instance spawns a
- * second one that dies of `EADDRINUSE` on the spot, leaving a window with
- * nothing behind it. Returns false when this process is the second one and
- * should quit.
+ * It matters for an app that owns a server, or a GPU: a second instance would
+ * spawn a second server, or start a second separation, with two windows that
+ * each think they are the one. Returns false when this process is the second
+ * one and should quit.
+ *
+ * **Not in dev.** A dev shell is one of several on purpose — a second worktree,
+ * a second machine's worth of testing on one laptop — and the lock is keyed to
+ * `userData`, which `state()` already gives every dev server of its own. Pass
+ * `devUrl()`'s answer; a dev run returns true without taking anything.
  */
-export function only(electron: Electron.App): boolean {
+export function only(electron: Electron.App, dev = ''): boolean {
+  if (dev) return true;
   if (!electron.requestSingleInstanceLock()) {
     electron.quit();
     return false;

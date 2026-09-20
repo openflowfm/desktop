@@ -36,8 +36,24 @@ const POLL_MS = 150;
 export interface Supervised {
   /** Whether the child is up. Read while waiting, and after it has given up. */
   readonly running: boolean;
+  /**
+   * The port the child actually bound, once it says so.
+   *
+   * A server told `PORT=0` takes whatever is free, and only it knows which. It
+   * reports over the IPC channel every child here is spawned with —
+   * `process.send({ type: 'listening', port })` after `listen` — and this
+   * resolves on that message. Rejects if the child exits first, so a window
+   * is never opened onto nothing.
+   */
+  readonly port: Promise<number>;
   /** Waits for something to answer on `port`, and says whether anything did. */
   answered(port: number, host?: string): Promise<boolean>;
+}
+
+/** What a supervised server sends its parent once it is listening. */
+export interface Listening {
+  type: 'listening';
+  port: number;
 }
 
 export interface Supervising {
@@ -69,20 +85,35 @@ export function supervise(spec: Supervising): Supervised {
   let child: ChildProcess | null = null;
   let stopping = false;
 
+  // Settled once, by the first launch: a restart rebinds the same port, or
+  // fails to and quits — either way the answer a window opened onto stands.
+  let bound: (port: number) => void = () => {};
+  let unbound: (why: Error) => void = () => {};
+  const port = new Promise<number>((resolve, reject) => {
+    bound = resolve;
+    unbound = reject;
+  });
+  port.catch(() => {}); // Observed below; an unheard rejection is not a crash.
+
   const start = (): void => {
     child = spawn(process.execPath, [server], {
-      stdio: 'inherit',
+      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
       env: {
         ...process.env,
         ELECTRON_RUN_AS_NODE: '1',
         ...spec.env,
       },
     });
+    child.on('message', (message) => {
+      const said = message as Partial<Listening>;
+      if (said.type === 'listening' && typeof said.port === 'number') bound(said.port);
+    });
     child.on('exit', (code, signal) => {
       child = null;
       const done =
         stopping || signal === 'SIGINT' || signal === 'SIGTERM' || code === 0 || code === 2;
       if (done) {
+        unbound(new Error(`${spec.app.name}: the server exited (${signal ?? code}) before listening`));
         if (!stopping) electron.quit();
         return;
       }
@@ -109,6 +140,7 @@ export function supervise(spec: Supervising): Supervised {
     get running() {
       return child !== null;
     },
+    port,
     async answered(port: number, host = '127.0.0.1') {
       // A beat before the first look. If something else is already on the port,
       // the very first poll succeeds — against *that* — and a window opens onto

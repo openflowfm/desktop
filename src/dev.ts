@@ -19,6 +19,15 @@ export function devUrl(one: App, env: NodeJS.ProcessEnv = process.env): string {
 }
 
 /**
+ * The same question with no app in hand — for the two things that have to be
+ * decided before `devUrl` has anything to point at: where state lives, and
+ * whether this launch is the only one allowed.
+ */
+export function isDev(env: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env.OPENFLOW_DEV_URL || env.OPENFLOW_DEV);
+}
+
+/**
  * ` — dev` after the title, and it has to keep saying it.
  *
  * The page sets its own `<title>`, which wins over the `BrowserWindow` option,

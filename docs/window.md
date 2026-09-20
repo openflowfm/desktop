@@ -16,8 +16,12 @@ included. That is where `localStorage` goes, so leaving it there would mean set[
 column widths and visual[flow]'s keystone corners in one bucket, each disappearing the
 day something else claimed it.
 
-`OPENFLOW_HOME` moves the root, which is also how you run a second copy of an app while
-one is open — the single-instance lock is keyed to this directory.
+`OPENFLOW_HOME` moves the root. A dev run — `OPENFLOW_DEV` or `OPENFLOW_DEV_URL` — gets
+`~/.openflow/<name>/dev/<vite port>/electron` instead: Chromium holds a profile for one
+process, and two dev shells is the ordinary case, a second worktree on its own
+`OPENFLOW_PORT_BASE`. The vite port already tells them apart, so it names the profile.
+`machine(app)` is the directory above both, for what belongs to the machine rather than
+to a profile — mix[flow]'s Python engine lives there so every shell shares one.
 
 ## `sandbox: true`, and what follows from it
 
@@ -100,6 +104,8 @@ reads as the question "am I in dev" as well as the answer "and it is there".
 `activate` reopens. These apps are launched deliberately and quit deliberately, so both
 halves say so rather than leaving the platform default.
 
-`only()` is the single-instance lock, and a second launch focuses the first. It matters
-most for an app that owns a server: a second instance spawns a second one that dies of
-`EADDRINUSE` on the spot, leaving a window with nothing behind it.
+`only(app, dev)` is the single-instance lock, and a second launch focuses the first. It
+matters for an app that owns a server or a GPU: a second instance would start a second
+server or a second separation, with two windows that each think they are the one. **Not
+in dev:** passed `devUrl()`'s answer, a dev run takes no lock, because several shells at
+once is what dev is for and `state()` has already given each its own profile.

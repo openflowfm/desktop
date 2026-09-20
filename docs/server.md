@@ -7,11 +7,28 @@ visual[flow] is the only one so far. It replaces `npm run dev` as the way to run
 nine, which is right for a dev loop and wrong for a gig.
 
 ```ts
-const server = supervise({ app: VISUALS, env: { OPENFLOW_VISUALS_DIST: rendererDist() } });
-const up = await server.answered(PORT);
-if (!server.running) return;
-if (!up) { /* say so, and quit */ }
+const server = supervise({
+  app: VISUALS,
+  env: { OPENFLOW_VISUALS_DIST: rendererDist(), OPENFLOW_VISUALS_PORT: '0' },
+});
+const port = await server.port;   // rejects if it exited first
+open({ app: VISUALS, home: `http://localhost:${port}`, ... });
 ```
+
+## The child picks the port
+
+Told `PORT=0`, a server takes whatever is free, and only it knows which — so every child
+here is spawned with an IPC channel, and the contract is one message:
+`process.send({ type: 'listening', port })` after `listen`. `port` resolves on it, and
+rejects if the child exits first, so a window is never opened onto nothing.
+
+That is what lets two instances share a machine without a port table. An explicit
+`OPENFLOW_<APP>_PORT` still wins, for the second-machine path where something else has
+to dial in; the bare `npm run server` keeps its fixed default for the same reason.
+
+In dev the shell does not own the server at all: the app's `watch` starts it first,
+learns the port the same way, and hands it to vite (to proxy to) and to the shell (in
+the environment). `dev` alone opens onto a vite that is already proxying somewhere.
 
 ## It is a child, not this process
 
@@ -47,11 +64,12 @@ longer sits one hop from the renderer once it is bundled.
 of `EADDRINUSE`, which is the most likely bug in any of this. `supervise()` registers it
 itself, so an app cannot forget.
 
-**Wait for the port before opening a window**, and settle before the first poll. A port
-already in use answers *immediately*, from whatever is on it — so without the settle the
-window opens onto somebody else's server a moment before ours dies. `answered()` is that
-wait; `waitFor()` is the same wait without the settle, for a dev server this app does not
-own, where opening onto what is already there is the entire point.
+**Open onto the port the child reported, not one you assumed.** A port already in use
+answers *immediately*, from whatever is on it — a window opened onto an assumed port
+attaches to somebody else's server a moment before ours dies. `port` cannot do that.
+`answered()` remains for a server on a port you were told, settling before its first poll
+for that reason; `waitFor()` is the same wait without the settle, for a dev server this
+app does not own, where opening onto what is already there is the entire point.
 
 **Do not restart into a failure that waiting cannot fix.** A clean exit is the server's
 own shutdown path, and status **2** is the one it emits specifically so a supervisor can
