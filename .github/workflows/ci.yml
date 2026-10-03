@@ -7,10 +7,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 26
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run test:coverage
       - run: npm run build
+      - run: npm run test:coverage
+      - run: npm pack --dry-run
       - run: node --input-type=module -e "import { NAMES } from '@openflow/desktop/apps.ts'; if (NAMES.length !== 3) process.exit(1)"
