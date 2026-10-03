@@ -38,7 +38,9 @@ describe('the published exports map', () => {
   it('is publishable: not private, public with provenance, files cover every export target', () => {
     const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
     expect(pkg.private).toBeUndefined();
-    expect(pkg.publishConfig).toEqual({ access: 'public', provenance: true });
+    expect(pkg.publishConfig).toEqual({ access: 'public' });
     expect(pkg.files).toEqual(expect.arrayContaining(['dist', 'electron-builder.base.yml']));
+    const release = readFileSync(path.join(root, '.github', 'workflows', 'release.yml'), 'utf8');
+    expect(release).toMatch(/NPM_CONFIG_PROVENANCE:\s*"true"/);
   });
 });
