@@ -1,7 +1,6 @@
 {
   "name": "@openflow/desktop",
   "version": "0.1.0-rc.4",
-  "private": true,
   "type": "module",
   "description": "The Electron main process every app here shares: the window, the scheme, the dev loop, the child server and the updater.",
   "files": [
@@ -17,20 +16,27 @@
     "./electron-builder.base.yml": "./electron-builder.base.yml",
     "./package.json": "./package.json"
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openflowfm/desktop.git"
   },
+  "homepage": "https://github.com/openflowfm/desktop#readme",
+  "bugs": "https://github.com/openflowfm/desktop/issues",
   "license": "MIT",
   "engines": {
     "node": ">=26"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
     "prepare": "npm run build",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "release": "changeset publish"
   },
   "dependencies": {
     "electron-updater": "^6.8.9"
@@ -39,11 +45,12 @@
     "electron": ">=44 <45"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@types/node": "^26.4.1",
-    "typescript": "^7.0.2",
-    "vitest": "5.0.0",
     "@vitest/coverage-v8": "5.0.0",
     "electron": "44.2.0",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "typescript": "^7.0.2",
+    "vitest": "5.0.0"
   }
 }
