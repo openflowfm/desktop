@@ -20,9 +20,9 @@ import { isDev } from './dev.ts';
  *
  * **A dev run gets a directory of its own, per dev server.** Chromium holds a
  * profile for one process, so two shells on one `userData` fight over it — and
- * two dev shells is the ordinary case: a second worktree on its own
- * `OPENFLOW_PORT_BASE`, opened against the same device. The vite port is what
- * already tells those worktrees apart, so it names the profile too:
+ * two dev shells is the ordinary case: a second worktree with its own dev
+ * server, opened against the same device. Each dev server is on its own free
+ * port, which the dev command hands the shell, so the port names the profile:
  * `~/.openflow/<name>/dev/<port>/electron`. A packaged app is one instance and
  * keeps the one directory.
  */
