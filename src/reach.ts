@@ -67,16 +67,16 @@ export interface Reach {
 }
 
 /**
- * The port a tab reaches this app on: `+4000` on its own dev server.
+ * The port a tab reaches this app on: `OPENFLOW_<NAME>_REACH_PORT`.
  *
- * Derived rather than declared, so one rule covers every app and a worktree that
- * moves `OPENFLOW_PORT_BASE` takes its reach with it exactly as it takes the
- * dev servers. The 5xxx family is dense — the two benches sit between the apps —
- * and nothing lives up here, so the whole set fits with no table of per-app
- * numbers to keep in step.
+ * Picked free by the app's dev command, like the dev server's own port, and
+ * handed to both ends — the shell that listens and the page (through vite) that
+ * dials. It used to be the dev server's port `+4000`; with dev servers on
+ * whatever port the OS hands out, that sum can run past 65535. `0` listens on any
+ * free port, which nothing can then find — a dev command always names one.
  */
 export function reachPort(one: App, env: NodeJS.ProcessEnv = process.env): number {
-  return uiPort(one, env) + 4000;
+  return Number(env[`OPENFLOW_${one.name.toUpperCase()}_REACH_PORT`]) || 0;
 }
 
 /**

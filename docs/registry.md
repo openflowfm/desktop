@@ -57,21 +57,17 @@ index would have made of it.
 
 ## Ports
 
-`ui` is an offset from `OPENFLOW_PORT_BASE`, so one variable moves a whole worktree out
-of the way of the next — which is what makes two checkouts against one device possible.
-The offsets are a hundred apart and shared with the two benches, which are not apps and
-are still counted in their own configs:
+**No dev port is fixed or assumed.** Many projects and worktrees run side by side, and
+a number like 5173 — vite's default, which this registry used to count from — is one
+somebody else is already on. So every dev server takes `PORT` when a launcher picked one
+(`.claude/launch.json` with `autoPort`), and otherwise port `0`: the OS hands out a free
+one. The app's dev command runs vite in its own process, reads the port vite settled on
+off the socket, and tells the shell: `OPENFLOW_DEV_URL` to open onto,
+`OPENFLOW_<NAME>_UI_PORT` to key its profile by, and `OPENFLOW_<NAME>_REACH_PORT`, a
+second free port, for a tab to reach the app on (`reach.ts`).
 
-| | offset |
-|---|---|
-| set[flow] | 0 |
-| the widget bench | +100 |
-| the device bench | +200 |
-| visual[flow] | +300 |
-| chart | +400 |
-
-`uiPort()` also reads `OPENFLOW_<NAME>_UI_PORT`, so a single app can be moved without
-moving the base.
+`uiPort()` reads those, and returns `0` when nothing has said; `devUrl()` refuses a dev
+run with no port rather than guessing one.
 
 A `server` port is not an offset from anything. A backend port is a thing another machine
 dials, and the second-machine arrangement is one this repo actually supports — so it is a
@@ -81,7 +77,8 @@ number with a variable of its own, and `serverPort()` reads both.
 
 1. An entry here.
 2. `<name>/electron/main.ts` and `preload.ts` — see the shape in [`../README.md`](../README.md).
-3. `<name>/vite.config.ts`, with `uiPort(APPS.<name>)` as its port.
+3. `<name>/vite.config.ts`, with `uiPort(APPS.<name>)` as its port, and a dev command
+   that reads vite's port and hands it on (see Ports).
 4. `<name>/index.html` and a renderer.
 5. `<name>/package.json` — `"main": "electron/dist/main.cjs"`, and a version, which
    `npm run dev:version` will then keep in step. Add it to the root `workspaces` unless

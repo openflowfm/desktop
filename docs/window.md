@@ -18,8 +18,8 @@ day something else claimed it.
 
 `OPENFLOW_HOME` moves the root. A dev run — `OPENFLOW_DEV` or `OPENFLOW_DEV_URL` — gets
 `~/.openflow/<name>/dev/<vite port>/electron` instead: Chromium holds a profile for one
-process, and two dev shells is the ordinary case, a second worktree on its own
-`OPENFLOW_PORT_BASE`. The vite port already tells them apart, so it names the profile.
+process, and two dev shells is the ordinary case, a second worktree with its own dev
+server. Each dev server is on its own free port, so the port names the profile.
 `machine(app)` is the directory above both, for what belongs to the machine rather than
 to a profile — mix[flow]'s Python engine lives there so every shell shares one.
 

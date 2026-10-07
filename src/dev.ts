@@ -15,7 +15,13 @@ import { uiPort, type App } from './apps.ts';
  */
 export function devUrl(one: App, env: NodeJS.ProcessEnv = process.env): string {
   if (env.OPENFLOW_DEV_URL) return env.OPENFLOW_DEV_URL;
-  return env.OPENFLOW_DEV ? `http://localhost:${uiPort(one, env)}` : '';
+  if (!env.OPENFLOW_DEV) return '';
+  const port = uiPort(one, env);
+  // No port is guessed (see `uiPort`): only the dev command knows where vite is.
+  if (!port) {
+    throw new Error(`${one.name}: OPENFLOW_DEV with no dev server port — start it with the app's dev command, which tells the shell where vite is`);
+  }
+  return `http://localhost:${port}`;
 }
 
 /**

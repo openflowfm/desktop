@@ -10,8 +10,8 @@ import { reach, reachOrigin, reachPort, reaching, type Reach } from './reach.ts'
 // pinning, because it puts the window's entire API on a port. Each of the facts
 // that keeps that narrow is a fact this file could lose without a symptom.
 
-// Well clear of the 5xxx family the apps and the two benches share.
-const BASE = { OPENFLOW_PORT_BASE: '18200' };
+// What an app's dev command hands the shell: where vite is, and where to listen.
+const BASE = { OPENFLOW_MIX_UI_PORT: '18200', OPENFLOW_MIX_REACH_PORT: '18201' };
 const ON = { ...BASE, OPENFLOW_DEV: '1' };
 
 const ipc = () => {
@@ -54,19 +54,11 @@ describe('whether it is there at all', () => {
     expect(allowed).not.toContain('*');
   });
 
-  it('gives every app a port of its own, clear of the dev servers', () => {
-    const ports = Object.values(APPS).map((one) => reachPort(one, BASE));
-    expect(new Set(ports).size).toBe(ports.length);
-    for (const one of Object.values(APPS)) {
-      expect(reachPort(one, BASE)).toBeGreaterThan(uiPort(one, BASE) + 500);
-    }
-  });
-
-  it('moves with the worktree, as the dev servers do', () => {
-    const far = { OPENFLOW_PORT_BASE: '19000' };
-    expect(reachPort(APPS.mix, far) - uiPort(APPS.mix, far)).toBe(
-      reachPort(APPS.mix, BASE) - uiPort(APPS.mix, BASE),
-    );
+  it('listens where the dev command said, and assumes no port of its own', () => {
+    expect(reachPort(APPS.mix, BASE)).toBe(18201);
+    expect(reachPort(APPS.mix, {})).toBe(0);
+    // Each app reads its own variable, so two apps' reaches never share one.
+    expect(reachPort(APPS.set, BASE)).toBe(0);
   });
 });
 

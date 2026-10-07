@@ -46,16 +46,6 @@ export interface App {
   title: string;
   /** Behind the page before it paints, so a cold start is not a white flash. */
   background: string;
-  /**
-   * This app's vite dev server, as an offset from `OPENFLOW_PORT_BASE`.
-   *
-   * One variable moves a whole worktree out of the way of the next, which is
-   * what makes two checkouts against one device possible. The offsets are a
-   * hundred apart and shared with the two benches — set 0, the widget bench
-   * +100, the device bench +200 — so `set/docs/dev-server.md` is where the whole
-   * set is written down.
-   */
-  ui: number;
   /** Absent for an app that is only a window. */
   server?: Server;
 }
@@ -65,19 +55,16 @@ export const APPS = {
     name: 'set',
     title: 'set[flow]',
     background: '#0a0a0b',
-    ui: 0,
   },
   mix: {
     name: 'mix',
     title: 'mix[flow]',
     background: '#0b0a09',
-    ui: 500,
   },
   visuals: {
     name: 'visuals',
     title: 'visual[flow]',
     background: '#000000',
-    ui: 300,
     server: { entry: 'server/index.ts', port: 17900, portEnv: 'OPENFLOW_VISUALS_PORT' },
   },
   // `satisfies` rather than an annotation: every entry is checked against `App`,
@@ -114,15 +101,18 @@ export function app(name: string | undefined): App {
 }
 
 /**
- * Where this app's vite dev server actually is.
+ * Where this app's vite dev server is, once something has said so.
  *
- * The base is read here rather than baked in, because a main process cannot load
- * `vite.config.ts` and both sides have to arrive at the same number from the
- * same variable.
+ * **No port is ever assumed.** Nothing here counts from a default like 5173:
+ * many projects and worktrees run side by side, and a fixed number is one
+ * somebody else is already on. `0` means "any free port" — vite asks the OS —
+ * and the app's dev command reads the port vite settled on off its socket and
+ * hands it to the shell as `OPENFLOW_<NAME>_UI_PORT` and `OPENFLOW_DEV_URL`.
+ * `PORT` is what a launcher that picks the port itself (`autoPort`) sets.
  */
 export function uiPort(one: App, env: NodeJS.ProcessEnv = process.env): number {
   const own = env[`OPENFLOW_${one.name.toUpperCase()}_UI_PORT`];
-  return Number(own) || (Number(env.OPENFLOW_PORT_BASE) || 5173) + one.ui;
+  return Number(own) || Number(env.PORT) || 0;
 }
 
 /**

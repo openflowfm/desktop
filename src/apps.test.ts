@@ -6,9 +6,8 @@ import { app, APPS, NAMES, present, serverPort, uiPort } from './apps.ts';
 
 // The registry is the one file here a test runner can reach — everything else
 // in this package imports `electron`, which only exists inside a main process.
-// It is also the file most worth pinning: a wrong offset is two dev servers
-// quietly fighting over a port, and a wrong port is a window that opens onto
-// somebody else's server.
+// It is also the file most worth pinning: a guessed port is a window that opens
+// onto somebody else's server.
 
 describe('the registry', () => {
   it('names every app it defines', () => {
@@ -16,20 +15,6 @@ describe('the registry', () => {
     for (const name of NAMES) {
       expect((APPS as Record<string, { name: string }>)[name]?.name).toBe(name);
     }
-  });
-
-  it('gives every app a distinct dev-server offset', () => {
-    const offsets = Object.values(APPS).map((one) => one.ui);
-    expect(new Set(offsets).size).toBe(offsets.length);
-  });
-
-  it('leaves the two benches their offsets', () => {
-    // The benches are not apps and are still counted in their own vite configs,
-    // at +100 and +200. An app that lands on either is the collision this
-    // registry cannot see for itself.
-    const offsets = Object.values(APPS).map((one) => one.ui);
-    expect(offsets).not.toContain(100);
-    expect(offsets).not.toContain(200);
   });
 
   it('names the app it cannot find, and the ones it can', () => {
@@ -76,25 +61,24 @@ describe('present', () => {
 });
 
 describe('uiPort', () => {
-  it('counts from the base', () => {
-    expect(uiPort(APPS.set, {})).toBe(5173);
-    expect(uiPort(APPS.visuals, {})).toBe(5473);
+  it('assumes no port: 0 asks the OS for a free one', () => {
+    expect(uiPort(APPS.set, {})).toBe(0);
+    expect(uiPort(APPS.visuals, {})).toBe(0);
+    // The old base is gone, not quietly honoured.
+    expect(uiPort(APPS.set, { OPENFLOW_PORT_BASE: '6000' })).toBe(0);
   });
 
-  it('follows a base that moved, which is how a second worktree works', () => {
-    expect(uiPort(APPS.set, { OPENFLOW_PORT_BASE: '6000' })).toBe(6000);
-    expect(uiPort(APPS.visuals, { OPENFLOW_PORT_BASE: '6000' })).toBe(6300);
+  it('takes the port a launcher picked', () => {
+    expect(uiPort(APPS.set, { PORT: '6123' })).toBe(6123);
   });
 
-  it('lets one app move without moving the base', () => {
+  it('takes the port the dev command found, over a launcher’s', () => {
     expect(uiPort(APPS.visuals, { OPENFLOW_VISUALS_UI_PORT: '5999' })).toBe(5999);
-    // And the override wins over a base that also moved, rather than adding.
-    const both = { OPENFLOW_PORT_BASE: '6000', OPENFLOW_VISUALS_UI_PORT: '5999' };
-    expect(uiPort(APPS.visuals, both)).toBe(5999);
+    expect(uiPort(APPS.visuals, { PORT: '6123', OPENFLOW_VISUALS_UI_PORT: '5999' })).toBe(5999);
   });
 
   it('ignores a variable that is not a number', () => {
-    expect(uiPort(APPS.set, { OPENFLOW_PORT_BASE: 'yes' })).toBe(5173);
+    expect(uiPort(APPS.set, { PORT: 'yes' })).toBe(0);
   });
 });
 
