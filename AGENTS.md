@@ -8,17 +8,19 @@ is an index: read the row for what you're changing.
 
 ## Checks
 
-Run `npm ci` once per worktree (its `prepare` also builds `dist/`). Each check
-is quick; run each once, in this order, after your last edit. CI
-(`.github/workflows/ci.yml`) runs the same list on every push and PR.
+Run `npm ci` once per worktree (its `prepare` also builds `dist/`). A change
+runs only `npm run build` and `npm run typecheck`. The rest runs in a test pass
+(when asked, or before a PR, each check once) and on CI
+(`.github/workflows/ci.yml`, every push and PR). Tests are written to a spec as
+their own step, not as part of a change.
 
 | Command | What it checks | When to run |
 | --- | --- | --- |
-| `npm run typecheck` | `src/` compiles, tests included (no emit) | Any change to `.ts` or tsconfig |
-| `npm run build` | Cleans and emits `dist/*.js` and `dist/*.d.ts` | Before `npm test` or `npm pack`; after any change to `src/` or `tsconfig.build.json` |
-| `npm test` | Unit tests, the signing backport against the installed electron-builder, and every `@openflow/desktop/<name>.ts` resolving through the exports map to `dist/` | Any change to `src/`, `package.json` exports or build config; needs `npm run build` first |
-| `npm run test:coverage` | Same as `npm test` plus coverage (what CI runs) | Instead of `npm test` when coverage matters; not both |
-| `npm pack --dry-run` | The tarball holds `dist/`, `docs/`, `electron-builder.base.yml`, README, LICENSE, `package.json`, and no sources or tests | Any change to `files`, `exports` or the build |
+| `npm run typecheck` | `src/` compiles, tests included (no emit) | After any change |
+| `npm run build` | Cleans and emits `dist/*.js` and `dist/*.d.ts` | After any change; before `npm test` or `npm pack` |
+| `npm test` | Unit tests, the signing backport against the installed electron-builder, and every `@openflow/desktop/<name>.ts` resolving through the exports map to `dist/` | Test pass and CI; needs `npm run build` first |
+| `npm run test:coverage` | Same as `npm test` plus coverage (what CI runs) | Instead of `npm test` in a test pass when coverage matters; not both |
+| `npm pack --dry-run` | The tarball holds `dist/`, `docs/`, `electron-builder.base.yml`, README, LICENSE, `package.json`, and no sources or tests | Test pass when `files`, `exports` or the build changed, and CI |
 
 There is no watcher; the build is a single `tsc` run.
 
@@ -33,7 +35,8 @@ breaking.
 ## Rules
 
 - Changing what consumers get (exports, behaviour, the builder base, files)
-  needs a changeset: `npx changeset`, commit the file under `.changeset/`.
+  needs a changeset, once per PR (not per change): `npx changeset`, commit the
+  file under `.changeset/`.
 - Never run `npm publish` or bump `version` by hand. The Release workflow does
   both (see README > Releasing).
 - Every module in `src/` is a public subpath. A new module is a new export; a
