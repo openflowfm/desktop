@@ -3,7 +3,9 @@
 The Electron main process every open[flow] app shares. Read [`README.md`](README.md) and
 `docs/` first; `docs/registry.md` is where ports and the app registry are explained.
 
-Run `npm ci`, `npm run typecheck` and `npm test`. Consumers pin this package by commit:
+Run `npm ci` once in a fresh clone. After a change, run only `npm run typecheck`. `npm test`
+runs in a test pass (when asked, or before a PR) and on CI; tests are written to a spec as
+their own step, not as part of a change. Consumers pin this package by commit:
 after pushing, update the pin in each consumer's `package.json` and lock.
 
 No dev port is ever fixed or assumed: dev servers take `PORT` or a free port from the OS,
